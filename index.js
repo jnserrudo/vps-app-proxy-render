@@ -1,4 +1,4 @@
-// index.js (Proxy en Render - VERSIÓN FINAL-FINAL)
+// index.js (Proxy en Render - VERSIÓN FINAL-FINAL-CORREGIDA)
 
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
@@ -17,17 +17,22 @@ app.use(
     changeOrigin: true,
     logLevel: "debug",
 
-    // Lógica de reescritura de ruta:
-    // Toma la ruta de la petición original (path) y le concatena la base de la app
+    // Lógica de reescritura de ruta - LA VERSIÓN CORRECTA
     pathRewrite: (path, req) => {
-      const newPath = VPS_APP_BASE_PATH + path;
-      console.log(`Rewriting path from "${path}" to "${newPath}"`);
-      return newPath;
+      // Caso 1: Si la petición es a la raíz del sitio ('/')...
+      // ...la redirigimos a la raíz de nuestra aplicación en el VPS.
+      if (path === "/") {
+        return VPS_APP_BASE_PATH + "/";
+      }
+
+      // Caso 2: Para cualquier otra petición (ej: /mra/guia_interactiva/assets/...),
+      // ya viene con la ruta correcta desde el navegador. La pasamos tal cual.
+      return path;
     },
   })
 );
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Proxy final escuchando en el puerto ${PORT}`);
+  console.log(`Proxy final y simplificado escuchando en el puerto ${PORT}`);
 });
