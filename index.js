@@ -1,4 +1,4 @@
-// index.js (Proxy en Render - VERSIÓN FINAL-FINAL-CORREGIDA)
+// index.js (Proxy en Render - LA SOLUCIÓN DEFINITIVA)
 
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
@@ -10,29 +10,33 @@ app.use(cors());
 const VPS_TARGET = "http://195.200.0.39";
 const VPS_APP_BASE_PATH = "/mra/guia_interactiva";
 
+// ----------------------------------------------------------------
+// PASO 1: REDIRECCIÓN EXPLÍCITA
+// Si el usuario accede a la raíz del proxy ('/'), lo redirigimos
+// a la ruta base de la aplicación.
+// ----------------------------------------------------------------
+app.get("/", (req, res) => {
+  console.log("Redirecting root to base path...");
+  // Usamos 302 (Temporal) o 301 (Permanente)
+  res.redirect(302, VPS_APP_BASE_PATH + "/");
+});
+
+// ----------------------------------------------------------------
+// PASO 2: PROXY SIMPLE
+// Ahora que el navegador tiene la URL correcta, el proxy solo
+// necesita pasar las peticiones al VPS sin modificar las rutas.
+// ----------------------------------------------------------------
 app.use(
   "/",
   createProxyMiddleware({
     target: VPS_TARGET,
     changeOrigin: true,
     logLevel: "debug",
-
-    // Lógica de reescritura de ruta - LA VERSIÓN CORRECTA
-    pathRewrite: (path, req) => {
-      // Caso 1: Si la petición es a la raíz del sitio ('/')...
-      // ...la redirigimos a la raíz de nuestra aplicación en el VPS.
-      if (path === "/") {
-        return VPS_APP_BASE_PATH + "/";
-      }
-
-      // Caso 2: Para cualquier otra petición (ej: /mra/guia_interactiva/assets/...),
-      // ya viene con la ruta correcta desde el navegador. La pasamos tal cual.
-      return path;
-    },
+    // ¡No necesitamos pathRewrite! Las rutas del navegador ya coinciden con las del VPS.
   })
 );
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Proxy final y simplificado escuchando en el puerto ${PORT}`);
+  console.log(`Proxy final con redirección escuchando en el puerto ${PORT}`);
 });
