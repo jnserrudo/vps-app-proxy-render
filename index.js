@@ -31,32 +31,32 @@ const VPS_APP_BASE_PATH = '/mra/guia_interactiva';
 const PROXY_PATH_PREFIX_RENDER = '/'; // La raíz de tu app de Render
 
 app.use(
-  PROXY_PATH_PREFIX_RENDER, // Captura todas las solicitudes a la raíz de Render
-  createProxyMiddleware({
-    target: VPS_TARGET,
-    changeOrigin: true, // Cambia el encabezado 'Host' a la URL del objetivo (VPS)
-    pathRewrite: {
-      // Esta es la parte crucial para el ruteo:
-      // Reemplaza el prefijo que viene de Render (la raíz '/')
-      // por la ruta base de tu aplicación en el VPS ('/mra/guia_interactiva')
-      [`^${PROXY_PATH_PREFIX_RENDER}`]: VPS_APP_BASE_PATH,
-    },
-    // Manejo de errores del proxy
-    onError: (err, req, res, target) => {
-      console.error('Error de proxy:', err);
-      res.status(500).send('Error del servidor proxy.');
-    },
-    onProxyReq: (proxyReq, req, res) => {
-        // Log para depuración
-        console.log(`Proxying request from ${req.originalUrl} to ${proxyReq.path} on ${target.href}`);
-    },
-    onProxyRes: (proxyRes, req, res) => {
-        // Puedes inyectar headers aquí si es necesario
-        // console.log(`Received response from target. Status: ${proxyRes.statusCode}`);
-    },
-    logLevel: 'debug', // Muestra logs detallados del proxy
-  })
-);
+    PROXY_PATH_PREFIX_RENDER, // Captura todas las solicitudes
+    createProxyMiddleware({
+      target: VPS_TARGET,
+      changeOrigin: true,
+      pathRewrite: (path, req) => {
+        // Reemplaza la raíz de Render ('/') por la ruta base de la app en el VPS
+        const newPath = path.replace(new RegExp(`^${PROXY_PATH_PREFIX_RENDER}`), VPS_APP_BASE_PATH);
+  
+        // Si el resultado es solo la ruta base sin barra, se la añadimos.
+        // Esto evita la redirección 301 del servidor Express.
+        if (newPath === VPS_APP_BASE_PATH) {
+          return VPS_APP_BASE_PATH + '/';
+        }
+        
+        return newPath;
+      },
+      onError: (err, req, res, target) => {
+        console.error('Error de proxy:', err);
+        res.status(500).send('Error del servidor proxy.');
+      },
+      onProxyReq: (proxyReq, req, res) => {
+        console.log(`Proxying request from ${req.originalUrl} to ${proxyReq.path}`);
+      },
+      logLevel: 'debug',
+    })
+  );
 
 // Define el puerto para la aplicación de Render
 const PORT = process.env.PORT || 3000; // Render asignará un puerto a través de process.env.PORT
