@@ -1,0 +1,17 @@
+{
+  "name": "vps-app-proxy",
+  "version": "1.0.0",
+  "description": "Proxy to forward requests to VPS app with HTTPS via Render",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "http-proxy-middleware": "^3.0.0",
+    "cors": "^2.8.5"
+  },
+  "author": "jnserrudo",
+  "license": "ISC",
+  "type": "module"
+}
