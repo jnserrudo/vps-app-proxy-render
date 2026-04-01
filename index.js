@@ -15,10 +15,12 @@ const VPS_APP_BASE_PATH = "/mra/guia_interactiva";
 
 // ----------------------------------------------------------------
 // Extensiones que se STREAMEAN directo (sin bufferear ni modificar).
-// Esto incluye assets pesados: imágenes, fuentes, JS, CSS, etc.
+// Assets pesados: imágenes, fuentes, JS, etc.
+// NOTA: CSS NO va acá porque puede contener background-image con URLs
+// absolutas del VPS que necesitan ser reescritas.
 // ----------------------------------------------------------------
 const STREAM_EXTENSIONS =
-  /\.(js|mjs|css|map|jpg|jpeg|png|gif|webp|svg|ico|avif|woff|woff2|ttf|eot|otf|mp4|mp3|wav|ogg|pdf|zip|gz|br)$/i;
+  /\.(map|jpg|jpeg|png|gif|webp|svg|ico|avif|woff|woff2|ttf|eot|otf|mp4|mp3|wav|ogg|pdf|zip|gz|br)$/i;
 
 // ----------------------------------------------------------------
 // PROXY 1: STREAMING (sin buffering)
@@ -29,6 +31,13 @@ const streamProxy = createProxyMiddleware({
   target: VPS_TARGET,
   changeOrigin: true,
   on: {
+    proxyRes: (proxyRes, req, res) => {
+      // Desactivar caché para que el navegador siempre pida la versión
+      // más nueva del VPS (evita ver assets desactualizados)
+      proxyRes.headers["cache-control"] = "no-cache, no-store, must-revalidate";
+      proxyRes.headers["pragma"] = "no-cache";
+      proxyRes.headers["expires"] = "0";
+    },
     error: (err, req, res) => {
       console.error("[Stream Proxy Error]", req.path, err.message);
       if (!res.headersSent) {
@@ -51,6 +60,11 @@ const rewriteProxy = createProxyMiddleware({
   on: {
     proxyRes: responseInterceptor(
       async (responseBuffer, proxyRes, req, res) => {
+        // Desactivar caché también en respuestas reescritas
+        res.setHeader("cache-control", "no-cache, no-store, must-revalidate");
+        res.setHeader("pragma", "no-cache");
+        res.setHeader("expires", "0");
+
         // Corregir headers de Location en redirects
         if (proxyRes.headers["location"]) {
           const newLoc = proxyRes.headers["location"].replace(
