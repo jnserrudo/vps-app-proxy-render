@@ -9,8 +9,13 @@ import cors from "cors";
 
 const app = express();
 app.use(cors());
-
-const VPS_TARGET = "http://195.200.0.39";
+// =========================================================================
+// MEJORA CLAVE: Uso de Variables de Entorno.
+// Si no se define VPS_IP en el panel de Render, usará la vieja por defecto,
+// garantizando que el VPS viejo NO SE ROMPA.
+// =========================================================================
+const TARGET_IP = process.env.VPS_IP || "195.200.0.39"; 
+const VPS_TARGET = `http://${TARGET_IP}`;
 const VPS_APP_BASE_PATH = "/mra/guia_interactiva";
 
 // ----------------------------------------------------------------
